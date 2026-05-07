@@ -259,6 +259,16 @@ python infer.py \
 `infer.py` writes restored images plus `metrics.csv` for folder or
 multi-checkpoint runs. Comparison sheets are saved under `output/compare/`.
 
+## Example Output
+
+This synthetic example is included so the repository has a small, redistributable
+visual preview without personal `usr_samples` or dataset-derived crops.
+
+![Synthetic x4 comparison](docs/assets/tiny_comparison.jpg)
+
+The shown model output was produced from an early SIDD real-world restoration
+checkpoint and is illustrative, not a benchmark result.
+
 ## Model Presets
 
 Approximate parameter counts:
