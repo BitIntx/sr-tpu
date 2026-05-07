@@ -1,12 +1,14 @@
-jax
-jaxlib
-flax
-optax
-numpy
-pillow
-tqdm
-wandb
-torch
-torchvision
-lpips
-piq
+--find-links https://storage.googleapis.com/jax-releases/libtpu_releases.html
+
+# Core TPU/JAX training stack. These versions match the TPU VM this project was
+# developed on; loosen pins only after a smoke test.
+jax[tpu]==0.6.2
+flax==0.10.7
+optax==0.2.8
+orbax-checkpoint==0.11.37
+
+# Data loading, logging, and image IO.
+numpy==2.2.6
+pillow==12.2.0
+tqdm==4.67.3
+wandb==0.26.1

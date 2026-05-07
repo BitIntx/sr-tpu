@@ -1,0 +1,9 @@
+# Optional neural perceptual metrics used by:
+#   python train.py --net-perceptual-metrics all
+#
+# The training loop still works without these packages; LPIPS/DISTS logging is
+# skipped if they are unavailable.
+torch>=2.2
+torchvision>=0.17
+lpips==0.1.4
+piq==0.8.0
