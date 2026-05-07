@@ -1,0 +1,12 @@
+jax
+jaxlib
+flax
+optax
+numpy
+pillow
+tqdm
+wandb
+torch
+torchvision
+lpips
+piq
