@@ -246,6 +246,22 @@ python train.py \
 
 ## Inference
 
+The checkpoints are JAX/Flax checkpoints, so inference is not TPU-only. They can
+run on CPU, NVIDIA GPU, or TPU as long as JAX is installed with the matching
+backend. For GPU inference, install the CUDA-enabled JAX wheel first, then the
+shared inference dependencies:
+
+```bash
+python3 -m venv ~/venvs/sr-tpu-infer
+source ~/venvs/sr-tpu-infer/bin/activate
+pip install --upgrade pip
+pip install --upgrade "jax[cuda13]"
+pip install -r requirements-infer.txt
+```
+
+For CPU-only inference, replace the JAX install line with `pip install -U jax`.
+For TPU VM inference, use `pip install -U "jax[tpu]"`.
+
 Upscale one image:
 
 ```bash
@@ -273,6 +289,7 @@ python infer.py \
   --checkpoint checkpoints/atd_v2_xlarge_sidd_real_x4 \
   --input path/to/images \
   --output samples/final_x4 \
+  --platform gpu \
   --tile-size 128 \
   --tile-overlap 16 \
   --save-bicubic \

@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--refiner-checkpoint-step", type=int, default=0)
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--platform", choices=["auto", "cpu", "tpu"], default="auto")
+    parser.add_argument("--platform", choices=["auto", "cpu", "tpu", "gpu", "cuda"], default="auto")
     parser.add_argument("--max-side", type=int, default=512)
     parser.add_argument("--compare", action="store_true")
     parser.add_argument("--save-base", action="store_true")
@@ -37,6 +37,8 @@ def parse_args() -> argparse.Namespace:
 
 def configure_platform(platform: str) -> None:
     if platform != "auto":
+        if platform == "gpu":
+            platform = "cuda"
         os.environ["JAX_PLATFORMS"] = platform
 
 

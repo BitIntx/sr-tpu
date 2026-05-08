@@ -41,9 +41,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", required=True, help="Output file or directory.")
     parser.add_argument(
         "--platform",
-        choices=["auto", "cpu", "tpu"],
+        choices=["auto", "cpu", "tpu", "gpu", "cuda"],
         default="auto",
-        help="Set JAX_PLATFORMS before importing JAX. Use cpu while training owns the TPU.",
+        help="Set JAX_PLATFORMS before importing JAX. Use cpu while training owns the TPU; gpu is an alias for cuda.",
     )
     parser.add_argument("--save-bicubic", action="store_true", help="Save x4 bicubic baselines.")
     parser.add_argument("--compare", action="store_true", help="Save per-image comparison contact sheets.")
@@ -98,6 +98,8 @@ def parse_args() -> argparse.Namespace:
 
 def configure_platform(platform: str) -> None:
     if platform != "auto":
+        if platform == "gpu":
+            platform = "cuda"
         os.environ["JAX_PLATFORMS"] = platform
 
 

@@ -1,0 +1,12 @@
+# Backend-specific JAX must be installed separately first:
+#   CPU:        pip install -U jax
+#   NVIDIA GPU: pip install -U "jax[cuda13]"
+#   TPU VM:     pip install -U "jax[tpu]"
+#
+# Then install these shared inference/runtime dependencies.
+flax==0.10.7
+optax==0.2.8
+orbax-checkpoint==0.11.37
+numpy==2.2.6
+pillow==12.2.0
+tqdm==4.67.3
