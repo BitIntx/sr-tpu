@@ -307,12 +307,16 @@ def make_eval_step(base_model, refiner):
 
 
 def predict_refined(base_model, refiner, base_params, refiner_state, x: jnp.ndarray, target_shape: tuple[int, int]):
-    dummy_target = jnp.zeros((x.shape[0], target_shape[0], target_shape[1], 3), dtype=jnp.float32)
     base = jnp.clip(base_model.apply({"params": base_params}, x), 0.0, 1.0)
-    bicubic = cubic_base_batch(x, dummy_target)
+    bicubic = cubic_base_batch(x, base)
     features = refiner_features(base, bicubic)
     pred = refiner_state.apply_fn({"params": refiner_state.params}, features, base)
-    return jnp.clip(base, 0.0, 1.0), jnp.clip(pred, 0.0, 1.0), jnp.clip(bicubic, 0.0, 1.0)
+    target_h, target_w = target_shape
+    return (
+        jnp.clip(base[:, :target_h, :target_w], 0.0, 1.0),
+        jnp.clip(pred[:, :target_h, :target_w], 0.0, 1.0),
+        jnp.clip(bicubic[:, :target_h, :target_w], 0.0, 1.0),
+    )
 
 
 def maybe_eval(eval_step, state, base_params, eval_batches, loss_weights, *, eval_batch_count: int, input_mode: str):
