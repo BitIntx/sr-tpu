@@ -16,7 +16,7 @@ Recommended for the full real-world ATD v2 training recipe:
 
 - Host RAM: 50 GB or more recommended
 - TPU HBM/device memory: 20 GB or more recommended
-- Disk: 30 GB or more for SIDD Small, prepared manifests, logs, and checkpoints
+- Disk: 30 GB or more for SIDD Small, or 120 GB+ for SIDD Medium plus checkpoints
 - Python: 3.10 or newer
 
 Smaller CPU smoke tests and tiny model checks need much less, but the xlarge and
@@ -26,7 +26,10 @@ xxlarge training commands below assume a reasonably large TPU VM.
 
 - `train.py`: TPU-friendly JAX/Flax training loop with W&B logging.
 - `infer.py`: checkpoint inference on files or folders, with optional tiling and bicubic comparisons.
+- `train_refiner.py`: trains a small residual cleanup model on top of a frozen SR checkpoint.
+- `infer_refiner.py`: inference for base SR checkpoint plus residual refiner checkpoint.
 - `sr_tpu/model.py`: EDSR-lite, HAT/ATD-style, and ATD v2-style model presets.
+- `sr_tpu/refiner.py`: residual refiner blocks for denoise/detail/color polish.
 - `sr_tpu/data.py`: HR-only and noisy/clean pair data loaders with synthetic degradation.
 - `prepare_dataset.py`: prepares DIV2K/OST-style HR folders.
 - `download_real_datasets.py`: downloads supported real-world restoration datasets.
@@ -154,6 +157,26 @@ The loader auto-detects `pairs.jsonl`. For SIDD rows it crops aligned
 noisy/clean images, downsamples the noisy crop to LR, and trains toward the
 clean HR crop. For clean self-pairs, the same image is used as source/target and
 phone-like LR degradation is synthesized.
+
+Larger SIDD Medium recipe:
+
+```bash
+python download_real_datasets.py \
+  --dataset sidd-medium-srgb \
+  --root ~/datasets/sr/real \
+  --extract
+
+python prepare_real_dataset.py \
+  --sidd-root ~/datasets/sr/real/sidd-medium-srgb \
+  --clean-hr-root ~/datasets/sr/DIV2K/DIV2K_train_HR \
+  --clean-hr-root ~/datasets/sr/OST/extracted/OutdoorSceneTrain_v2 \
+  --out ~/datasets/sr/prepared/sr_real_x4_v3_sidd_medium \
+  --min-side 256 \
+  --val-ratio 0.05 \
+  --sidd-repeat 16 \
+  --clean-limit 10000 \
+  --overwrite
+```
 
 ## Train
 
@@ -321,6 +344,55 @@ samples/usr_samples
 
 Place your own LR images in `usr_samples/` if you want periodic qualitative
 logging. That directory is ignored by git.
+
+## Residual Refiner
+
+`train_refiner.py` trains a small residual model on top of a frozen SR checkpoint.
+The base model handles x4 structure; the refiner only predicts a bounded cleanup
+residual for denoise/detail/color polish.
+
+With `--crop-size 256 --scale 4`, the full path is LR `64x64` -> frozen ATD
+base `256x256` -> refiner `256x256`. The refiner does not upscale by itself; it
+polishes the base output at final HR resolution.
+
+Example using the ATD v2 xlarge SIDD Medium base:
+
+```bash
+python train_refiner.py \
+  --base-checkpoint ~/dev/sr-tpu/checkpoints/atd_v2_xlarge_real_v3_sidd_medium_long_x4/checkpoint_400000 \
+  --data ~/datasets/sr/prepared/sr_real_x4_v3_sidd_medium/train_pairs \
+  --val-data ~/datasets/sr/prepared/sr_real_x4_v3_sidd_medium/val_pairs \
+  --out checkpoints/atd_v2_xlarge_refiner_phone_real_x4 \
+  --scale 4 \
+  --crop-size 256 \
+  --batch-size 2 \
+  --steps 200000 \
+  --lr 8e-5 \
+  --warmup-steps 3000 \
+  --degradation phone-real \
+  --refiner-features 64 \
+  --refiner-blocks 10 \
+  --refiner-residual-scale 0.25 \
+  --log-every 25 \
+  --eval-every 1000 \
+  --save-every 5000 \
+  --keep-checkpoints 20 \
+  --wandb \
+  --wandb-run-name atd_v2_xlarge_refiner_phone_real_x4
+```
+
+Inference with base + refiner:
+
+```bash
+python infer_refiner.py \
+  --base-checkpoint checkpoints/atd_v2_xlarge_real_v3_sidd_medium_long_x4/checkpoint_400000 \
+  --refiner-checkpoint checkpoints/atd_v2_xlarge_refiner_phone_real_x4/checkpoint_100000 \
+  --input usr_samples \
+  --output samples/refiner_preview \
+  --compare \
+  --save-base \
+  --save-bicubic
+```
 
 ## Checkpoints And Artifacts
 

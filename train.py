@@ -195,6 +195,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--save-every", type=int, default=1000)
     parser.add_argument("--keep-checkpoints", type=int, default=3)
     parser.add_argument("--resume", default="", help="Checkpoint dir to restore before training.")
+    parser.add_argument(
+        "--reset-optimizer-on-resume",
+        action="store_true",
+        help="Restore model weights from --resume, but restart optimizer state and step count for fine-tuning.",
+    )
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--wandb-project", default="sr-tpu")
     parser.add_argument("--wandb-run-name", default="")
@@ -1270,7 +1275,9 @@ def main() -> None:
     skip_grad_norm = jnp.asarray(args.skip_grad_norm, dtype=jnp.float32)
     skip_loss_threshold = jnp.asarray(args.skip_loss_threshold, dtype=jnp.float32)
     if args.resume:
-        state = checkpoints.restore_checkpoint(Path(args.resume).expanduser(), state)
+        state = checkpoints.restore_checkpoint(Path(args.resume).expanduser().resolve(), state)
+        if args.reset_optimizer_on_resume:
+            state = state.replace(step=0, opt_state=tx.init(state.params))
     elif any(out_dir.glob("checkpoint_*")):
         state = checkpoints.restore_checkpoint(out_dir, state)
 

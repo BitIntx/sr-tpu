@@ -211,7 +211,7 @@ def main() -> None:
     write_jsonl(out_dir / "val_pairs" / "pairs.jsonl", val_rows)
 
     metadata = {
-        "name": "sr_real_x4_v1",
+        "name": out_dir.name,
         "scale": args.scale,
         "min_side": args.min_side,
         "sidd_root": str(sidd_root),
@@ -231,7 +231,7 @@ def main() -> None:
     (out_dir / "README.md").write_text(
         "\n".join(
             [
-                "# sr_real_x4_v1",
+                f"# {out_dir.name}",
                 "",
                 "Prepared pair-manifest dataset for real-world x4 restoration.",
                 "",
