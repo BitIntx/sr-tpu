@@ -1,3 +1,5 @@
+#ABANDONED PROJECT!!!
+
 # TPU Super-Resolution
 
 JAX/Flax training scaffold for x4 image super-resolution on Cloud TPU. The
